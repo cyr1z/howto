@@ -1,6 +1,6 @@
 # howto
 
-###[attrs howto](https://github.com/cyr1z/howto/blob/main/attrs_.ipynb)
+### [attrs howto](https://github.com/cyr1z/howto/blob/main/attrs_.ipynb)
    ``` python
    @attrs
    class Student(Person, User):

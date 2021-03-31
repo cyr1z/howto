@@ -276,10 +276,4 @@ Setup certbot for our domain
 ```shell
 sudo certbot --nginx -d somedomein.com
 ```
-
-[https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson48.md]: https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson48.md
-[https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson47.md]: https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson47.md
-[https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-18-04-ru]: https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-18-04-ru
-[https://the-bosha.ru/2016/06/29/django-delaem-damp-bazy-dannykh-i-vosstanavlivaem-iz-nego-s-dumpdata-i-loaddata/]: https://the-bosha.ru/2016/06/29/django-delaem-damp-bazy-dannykh-i-vosstanavlivaem-iz-nego-s-dumpdata-i-loaddata/
-
-
+[Link text](URL)

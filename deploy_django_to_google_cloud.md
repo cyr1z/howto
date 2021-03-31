@@ -1,4 +1,4 @@
-#  Deloy Django site to cloud with ubuntu
+#  Deploy Django project to Ubuntu instance
 
 We use Pipenv, Postgres, python3, Django 3, .env file for settings and git repository with project
 
@@ -18,7 +18,7 @@ pipenv lock
 
 ## On server
 
-### Install python, nginx and postgresql
+### Install *python, nginx* and *postgresql*
 
 ```shell
 sudo apt update
@@ -33,11 +33,11 @@ pip install pipenv
 
 ### Create database
 
-User: **myuser**
+User: `myuser`
 
-DB: **mydb**
+DB: `mydb`
 
-password: **mypass**
+password: `mypass`
 
 ```
 sudo -u postgres psql
@@ -51,22 +51,105 @@ create database mydb with encoding 'UTF8';
 create user myuser with password 'mypass';
 ```
 
-```
+```sql
 grant all on database mydb to myuser;
 ```
 
 ### Clone project
 
-git clone git@github.com:some_user/some_repo.git
+```shell
+git clone git@github.com:some_user/some_project.git
+```
+
+### Create virtual environment
+
+```shell
+cd some_project
+pipenv shell
+```
+
+### Install the requirements
+
+```shell
 pipenv install --ignore-pipfile
-python manage.py migrate
-python ./manage.py loaddata db.json
-python manage.py runserver 0.0.0.0:8000
-
 pipenv install gunicorn
-gunicorn --bind 0.0.0.0:8000 Pizzeria_django.wsgi
+```
 
+### Create `.env` file for environment variables
+
+```shell
+nano .env
+```
+
+```shell
+DEBUG = False
+SECRET_KEY = '---------=======django-secret=========---------'
+DBNAME = 'mydb'
+DBUSER = 'myuser'
+DBPASSWORD = 'mypass'
+DBHOST = 'localhost'
+DBPORT = '5432'
+ALLOWED_HOSTS = "127.0.0.1, localhost, somedomain.com"
+
+```
+
+in *settings.py*  I have these lines:
+
+```python
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv("DEBUG")
+
+ALLOWED_HOSTS = [_.strip() for _ in os.getenv("ALLOWED_HOSTS").split(',')]
+
+...
+
+# Database
+# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.getenv("DBNAME"),
+        'USER': os.getenv("DBUSER"),
+        'PASSWORD': os.getenv("DBPASSWORD"),
+        'HOST': os.getenv("DBHOST"),
+        'PORT': os.getenv("DBPORT"),
+
+    }
+}
+```
+
+### Update database and load data
+
+```shell
+python manage.py migrate
+python manage.py loaddata db.json
+```
+
+### Test django 
+
+```shell
+sudo ufw allow 8000
+```
+
+```shell
+python manage.py runserver 0.0.0.0:8000
+```
+
+### Test gunicorn
+
+```shell
+gunicorn --bind 0.0.0.0:8000 Pizzeria_django.wsgi
+```
+
+### Demonization of the gunicorn
+
+```shell
 sudo nano /etc/systemd/system/gunicorn.service
+```
 
 [Unit]
 Description=gunicorn daemon

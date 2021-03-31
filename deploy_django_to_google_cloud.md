@@ -24,7 +24,7 @@ pipenv lock
 sudo apt update
 ```
 ```sh
-sudo apt install python3-pip python3-dev python3-pip libpq-dev postgresql postgresql-contrib nginx curl
+sudo apt install python3-pip python3-dev python3-pip libpq-dev postgresql postgresql-contrib nginx certbot python3-certbot-nginx curl
 ```
 
 ```shell
@@ -148,9 +148,35 @@ gunicorn --bind 0.0.0.0:8000 Pizzeria_django.wsgi
 ### Demonization of the gunicorn
 
 ```shell
+sudo nano /etc/systemd/system/gunicorn.socket
+```
+
+```shell
+#/etc/systemd/system/gunicorn.socket
+
+[Unit]
+Description=gunicorn socket
+
+[Socket]
+ListenStream=/home/user/some_project/run/gunicorn.sock
+
+[Install]
+WantedBy=sockets.target
+```
+
+The `Unit` block is responsible for describing the demon
+
+The `Socket` block is responsible for where the socket file will be located, `some_project` in this case is the name of the folder with the project, `run` is the name of the folder with the socket file (for some reason it is customary to call this)
+
+`Install` block is responsible for automatic start at system startup
+
+
+
+```shell
 sudo nano /etc/systemd/system/gunicorn.service
 ```
 
+```shell
 [Unit]
 Description=gunicorn daemon
 Requires=gunicorn.socket
@@ -159,81 +185,101 @@ After=network.target
 [Service]
 User=root
 Group=www-data
-WorkingDirectory=/root/pizzeria/
-EnvironmentFile=/root/pizzeria/.env
-ExecStart=/root/.local/share/virtualenvs/pizzeria-i1DZOXbP/bin/gunicorn \
+WorkingDirectory=/home/user/some_project/
+EnvironmentFile=/home/user/some_project/.env
+ExecStart=/home/user/.local/share/virtualenvs/some_project-zzzxxx333/bin/gunicorn \
           --access-logfile - \
           --workers 3 \
-          --bind unix:/root/pizzeria/run/gunicorn.sock \
-          Pizzeria_django.wsgi:application
+          --bind unix:/home/user/some_project/run/gunicorn.sock \
+          some_project.wsgi:application
 
 [Install]
 WantedBy=multi-user.target
+```
+
+`/home/user/.local/share/virtualenvs/some_project-zzzxxx333/` - .venv directory. Use `which python` for find them
+
+`some_project.wsgi` '*some_project*' is the folder of basic application
 
 
-/root/.local/share/virtualenvs/pizzeria-i1DZOXbP - .venv to find use 'which python' 
 
-sudo nano /etc/systemd/system/gunicorn.socket
-
-#/etc/systemd/system/gunicorn.socket
-
-[Unit]
-Description=gunicorn socket
-
-[Socket]
-ListenStream=/root/pizzeria/run/gunicorn.sock
-
-[Install]
-WantedBy=sockets.target
-
-
+```shell
 sudo systemctl start gunicorn.socket
 sudo systemctl enable gunicorn.socket
 sudo systemctl start gunicorn.socket
+```
+
+test
+
+```shell
 sudo systemctl status gunicorn.socket
 
 sudo systemctl restart gunicorn
+gunicorn --bind 0.0.0.0:8000 /home/user/some_project/some_project.wsgi
+```
 
-Nginx
-sudo apt install nginx
-sudo nano /etc/nginx/sites-available/pizzeria
 
+
+### Nginx  config
+
+```shell
+sudo nano /etc/nginx/sites-available/some_project
+```
+
+```nginx
 server {
     listen 80;
-    server_name pizza.zolotarev.pp.ua;
+    server_name 10.110.0.10;
 }
+```
 
-Welcome to nginx!
+`10.110.0.10` - is a intro network instance ip
 
+```shell
+sudo systemctl restart nginx
+```
+
+
+
+> Welcome to nginx!
+
+```shell
+sudo nano /etc/nginx/sites-available/some_project
+```
+
+```nginx
 server {
     listen 80;
-    server_name 10.116.0.2;
+    server_name somedomain.com;
     location /static/ {
-        root /root/pizzeria/;
+        root /home/user/some_project/;
         }
         location /media/ {
-            root /root/pizzeria/;
+            root /home/user/some_project/;
         }
         location / {
             include proxy_params;
-            proxy_pass http://unix:/root/pizzeria/run/gunicorn.sock;
+            proxy_pass http://unix://home/user/some_project/run/gunicorn.sock;
         }
 
 }
+```
+
+```shell
+sudo systemctl restart gunicorn
 
 sudo systemctl restart nginx
+```
 
-gunicorn --bind 0.0.0.0:8000 /root/pizzeria/Pizzeria_django.wsgi
+Setup certbot for our domain
+
+```shell
+sudo certbot --nginx -d somedomein.com
+```
+
+[https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson48.md]: https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson48.md
+[https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson47.md]: https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson47.md
+[https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-18-04-ru]: https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-18-04-ru
+[https://the-bosha.ru/2016/06/29/django-delaem-damp-bazy-dannykh-i-vosstanavlivaem-iz-nego-s-dumpdata-i-loaddata/]: https://the-bosha.ru/2016/06/29/django-delaem-damp-bazy-dannykh-i-vosstanavlivaem-iz-nego-s-dumpdata-i-loaddata/
 
 
-namei -l /root/pizzeria/run/gunicorn.sock
-
-sudo apt install certbot python3-certbot-nginx
-
-sudo certbot --nginx -d pizza.zolotarev.pp.ua
-
-https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson48.md
-https://github.com/PonomaryovVladyslav/PythonCources/blob/master/lesson47.md
-https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-18-04-ru
-https://the-bosha.ru/2016/06/29/django-delaem-damp-bazy-dannykh-i-vosstanavlivaem-iz-nego-s-dumpdata-i-loaddata/
-[https://pizza.zolotarev.pp.ua/](https://pizza.zolotarev.pp.ua/)

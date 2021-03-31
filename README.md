@@ -25,7 +25,7 @@ Show Current Directory
 
 
 
-[Deploy Django project to Ubuntu instance]: https://github.com/cyr1z/howto/blob/main/deploy_django_to_google_cloud.md
+### [Deploy Django project to Ubuntu instance]: (https://github.com/cyr1z/howto/blob/main/deploy_django_to_google_cloud.md)
 
 
 
